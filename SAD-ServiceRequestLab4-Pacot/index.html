@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Laboratory Asset Management System</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase.js"></script><script src="js/app.js" defer></script>
+</head>
+<body>
+<header class="topbar"><div><h1>Laboratory Asset Management</h1><span>Role-Based Asset Transaction & Approval</span></div><div class="user-area"><span id="userName"></span><span id="roleBadge" class="role-badge"></span><button id="logoutBtn" class="btn btn-outline">Logout</button></div></header>
+<div class="layout">
+<aside class="sidebar">
+<button class="nav-btn active" data-section="dashboard">Dashboard</button>
+<button class="nav-btn" data-section="equipment">Equipment</button>
+<button class="nav-btn" data-section="borrowing">Borrowing Requests</button>
+<button class="nav-btn" data-section="maintenance">Maintenance</button>
+<button class="nav-btn admin-only" data-section="users">Users</button>
+<button class="nav-btn admin-only" data-section="audit">Audit Logs</button>
+</aside>
+<main class="content">
+<section id="dashboard" class="page-section"><div class="section-heading"><div><h2>Dashboard</h2><p>Overview of laboratory assets and borrowing transactions.</p></div></div><div class="stats-grid"><div class="stat-card"><span>Equipment</span><strong id="equipmentCount">0</strong></div><div class="stat-card"><span>Available</span><strong id="availableCount">0</strong></div><div class="stat-card"><span>Pending Requests</span><strong id="pendingCount">0</strong></div><div class="stat-card"><span>Borrowed</span><strong id="borrowedCount">0</strong></div></div><div class="card"><h3>Current User</h3><p id="currentUserInfo">Loading...</p></div></section>
+
+<section id="equipment" class="page-section hidden"><div class="section-heading"><div><h2>Equipment</h2><p>View available laboratory assets.</p></div><button id="addEquipmentBtn" class="btn btn-primary admin-only">+ Add Equipment</button></div><div id="equipmentForm" class="card hidden"><h3>Add Equipment</h3><form id="equipmentAddForm" class="form-grid"><div><label>Asset Code</label><input id="assetCode" required placeholder="LAP-003"></div><div><label>Name</label><input id="assetName" required placeholder="Equipment name"></div><div><label>Category</label><input id="assetCategory" required placeholder="Laptop"></div><div><label>Status</label><select id="assetStatus"><option>Available</option><option>Maintenance</option></select></div><div class="full"><label>Description</label><textarea id="assetDescription" rows="3"></textarea></div><div><button class="btn btn-primary">Save Equipment</button><button type="button" id="cancelEquipment" class="btn btn-outline">Cancel</button></div></form></div><div class="card table-wrapper"><table><thead><tr><th>Code</th><th>Name</th><th>Category</th><th>Status</th><th>Action</th></tr></thead><tbody id="equipmentBody"></tbody></table></div></section>
+
+<section id="borrowing" class="page-section hidden"><div class="section-heading"><div><h2>Borrowing Requests</h2><p>Submit, review, release, and return equipment according to its status.</p></div><button id="newBorrowBtn" class="btn btn-primary requester-staff">+ New Borrowing Request</button></div><div id="borrowForm" class="card hidden"><h3>New Borrowing Request</h3><form id="borrowAddForm" class="form-grid"><div><label>Equipment</label><select id="borrowEquipment" required></select></div><div><label>Requester Name</label><input id="borrowerName" required></div><div class="full"><label>Purpose</label><textarea id="borrowPurpose" rows="3" required placeholder="Explain why the equipment is needed."></textarea></div><div><label>Expected Return Date</label><input id="expectedReturn" type="date"></div><div><button class="btn btn-primary">Submit Request</button><button type="button" id="cancelBorrow" class="btn btn-outline">Cancel</button></div></form></div><div class="filters card"><input id="borrowSearch" placeholder="Search requester, purpose, or equipment..."><select id="borrowStatus"><option>All</option><option>Pending</option><option>Approved</option><option>Rejected</option><option>Released</option><option>Returned</option><option>Overdue</option><option>Closed</option></select></div><div class="card table-wrapper"><table><thead><tr><th>ID</th><th>Equipment</th><th>Requester</th><th>Purpose</th><th>Status</th><th>Action</th></tr></thead><tbody id="borrowingBody"></tbody></table></div></section>
+
+<section id="maintenance" class="page-section hidden"><div class="section-heading"><div><h2>Maintenance</h2><p>Submit and process equipment maintenance requests.</p></div><button id="newMaintenanceBtn" class="btn btn-primary requester-staff">+ Maintenance Request</button></div><div id="maintenanceForm" class="card hidden"><form id="maintenanceAddForm"><div class="form-grid"><div><label>Equipment</label><select id="maintenanceEquipment" required></select></div><div class="full"><label>Problem</label><textarea id="maintenanceDescription" rows="3" required></textarea></div></div><button class="btn btn-primary">Submit</button></form></div><div class="card table-wrapper"><table><thead><tr><th>ID</th><th>Equipment</th><th>Description</th><th>Status</th><th>Action</th></tr></thead><tbody id="maintenanceBody"></tbody></table></div></section>
+
+<section id="users" class="page-section hidden"><div class="section-heading"><div><h2>User Roles</h2><p>Administrator-only role management.</p></div></div><div class="card table-wrapper"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Action</th></tr></thead><tbody id="usersBody"></tbody></table></div></section>
+<section id="audit" class="page-section hidden"><div class="section-heading"><div><h2>Audit Logs</h2><p>Critical actions are recorded for traceability.</p></div></div><div class="card table-wrapper"><table><thead><tr><th>Date</th><th>User</th><th>Action</th><th>Module</th><th>Record</th><th>Description</th></tr></thead><tbody id="auditBody"></tbody></table></div></section>
+</main></div>
+
+<div id="returnModal" class="modal hidden"><div class="modal-content"><h3>Process Equipment Return</h3><form id="returnForm" class="form-grid"><div class="full"><label><input type="checkbox" id="damageCheckbox"> Equipment is damaged</label></div><div class="full" id="damageReportContainer"><label>Damage Report</label><textarea id="damageReport" rows="3" placeholder="Describe the damage..."></textarea></div><div><button class="btn btn-primary" type="submit">Process Return</button><button type="button" id="cancelReturn" class="btn btn-outline">Cancel</button></div></form></div></div>
+
+<div id="toast" class="toast"></div>
+</body></html>
