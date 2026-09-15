@@ -1,8 +1,9 @@
 -- LABORATORY 4 - ROLE-BASED ASSET TRANSACTION AND APPROVAL MANAGEMENT
--- Run this in Supabase SQL Editor.
+
 
 create table if not exists profiles (
   id uuid primary key references auth.users(id) on delete cascade,
+  email text not null default '',
   full_name text not null default 'User',
   role text not null default 'requester' check (role in ('admin','staff','requester')),
   created_at timestamptz not null default now()
@@ -77,9 +78,10 @@ language plpgsql
 security definer set search_path = public
 as $$
 begin
-  insert into public.profiles (id, full_name, role)
+  insert into public.profiles (id, email, full_name, role)
   values (
     new.id,
+    coalesce(new.email, ''),
     coalesce(new.raw_user_meta_data->>'full_name', split_part(coalesce(new.email,'User'),'@',1)),
     case when new.raw_user_meta_data->>'role' in ('admin','staff','requester')
          then new.raw_user_meta_data->>'role' else 'requester' end
@@ -192,3 +194,17 @@ on conflict (asset_code) do nothing;
 update profiles set role='admin', full_name='Junry Pacot' where id='abc8aef4-38af-4146-b754-7e897e3bb52b';
 update profiles set role='staff', full_name='Ana Garcia' where id='7700fcc4-c2b2-4ff5-bc2d-32ddc29a3bd2';
 update profiles set role='requester', full_name='Maria Santos' where id='bcd5f4ef-8e6f-4b2c-9add-a832805b5b55';
+
+-- Migration: Add email column if it doesn't exist and backfill existing profiles
+do $$
+begin
+  if not exists (select 1 from information_schema.columns where table_name = 'profiles' and column_name = 'email') then
+    alter table profiles add column email text not null default '';
+  end if;
+end $$;
+
+-- Backfill email addresses from auth.users for existing profiles
+update profiles p
+set email = au.email
+from auth.users au
+where p.id = au.id and p.email = '';
